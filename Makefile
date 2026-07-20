@@ -1,0 +1,74 @@
+CROSS_COMPILE ?= aarch64-linux-gnu-
+CC            := $(CROSS_COMPILE)gcc
+LD            := $(CROSS_COMPILE)ld
+OBJCOPY       := $(CROSS_COMPILE)objcopy
+OBJDUMP       := $(CROSS_COMPILE)objdump
+
+BUILD_DIR     ?= build
+OBJ_DIR       := $(BUILD_DIR)/obj
+
+TARGET_NAME   := BRIDGE
+TARGET_ELF    := $(BUILD_DIR)/$(TARGET_NAME).elf
+TARGET_IMAGE  := $(BUILD_DIR)/$(TARGET_NAME).bin
+TARGET_BIN    := $(TARGET_NAME).BIN
+
+SRC_DIRS      := src asm
+SRC_C         := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
+SRC_S         := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.S))
+OBJS          := $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRC_C)) \
+                 $(patsubst %.S,$(OBJ_DIR)/%.o,$(SRC_S))
+
+CPPFLAGS      += -Iinclude -I../axLib/include
+CFLAGS        += -mcpu=cortex-a72 -ffreestanding -fno-builtin -nostdlib -Wall -Wextra -O2
+LDFLAGS       += -T linker.ld --no-dynamic-linker
+LDLIBS        += ../axLib/build/libaxlib.a
+
+FM_EXEC_MAGIC ?= 0x41584F535441534B
+FM_EXEC_MODE  ?= 1
+
+MKDIR_P       ?= mkdir -p
+RM_RF         ?= rm -rf
+
+.PHONY: all clean axlib
+
+all: $(TARGET_ELF) $(TARGET_BIN)
+
+axlib:
+	@$(MAKE) -C ../axLib --no-print-directory
+
+$(OBJ_DIR):
+	@$(MKDIR_P) $@
+
+$(BUILD_DIR):
+	@$(MKDIR_P) $@
+
+$(OBJ_DIR)/%.o: %.c | $(BUILD_DIR)
+	@echo "CC  $<"
+	@$(MKDIR_P) $(@D)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.o: %.S | $(BUILD_DIR)
+	@echo "AS  $<"
+	@$(MKDIR_P) $(@D)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(TARGET_ELF): axlib $(OBJS) | $(BUILD_DIR)
+	@echo "LD  $@"
+	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
+
+$(TARGET_IMAGE): $(TARGET_ELF)
+	@echo "OBJCOPY  $@"
+	$(OBJCOPY) $< -O binary $@
+
+$(TARGET_BIN): $(TARGET_IMAGE)
+	@echo "PACK  $@"
+	@python3 -c "from pathlib import Path; import struct; image = Path(r'$(TARGET_IMAGE)').read_bytes(); hdr = struct.pack('<QQQQ', int('$(FM_EXEC_MAGIC)', 0), int('$(FM_EXEC_MODE)', 0), 0, len(image)); Path(r'$(TARGET_BIN)').write_bytes(hdr + image)"
+	@echo "---------------------------------------"
+	@echo "axBridge Build Success"
+	@echo "---------------------------------------"
+
+clean:
+	$(RM_RF) $(BUILD_DIR) $(TARGET_BIN)
+
+dump:
+	@$(OBJDUMP) -d $(TARGET_ELF)
