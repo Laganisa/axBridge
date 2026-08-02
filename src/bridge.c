@@ -9,7 +9,19 @@ int main(void)
 
 int bridge_main(void)
 {
-    str_write("HI");
+    str_write("bridge main");
+
+    str_write("bridge inf loop");
+    while (1)
+    {
+        ;
+    }
+    return 0;
+}
+
+int debug_main(void)
+{
+    str_write("debug bridge main");
 
     str_write("bridge inf loop");
     while (1)
