@@ -9,9 +9,9 @@ int main(void)
 
 int bridge_main(void)
 {
-    str_write("bridge main");
+    write(0, "%s", "bridge main\n");
 
-    str_write("bridge inf loop");
+    write(0, "%s", "\nbridge inf loop\n");
     while (1)
     {
         ;
@@ -21,9 +21,9 @@ int bridge_main(void)
 
 int debug_main(void)
 {
-    str_write("debug bridge main");
+    write(0, "%s", "debug bridge main\n");
 
-    str_write("bridge inf loop");
+    write(0, "%s", "\nbridge inf loop\n");
     while (1)
     {
         ;
