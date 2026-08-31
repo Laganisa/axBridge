@@ -11,10 +11,32 @@ int bridge_main(void)
 {
     write(0, "%s", "bridge main\n");
 
+    uint8_t bridge_setup_buf;
+
+    kernel_setup(&bridge_setup_buf, 1);
+
     write(0, "%s", "\nbridge inf loop\n");
     while (1)
     {
-        ;
+        uint8_t buf[64];
+
+        if ((bridge_setup_buf >> 4) == 3)
+        {
+            write(0, "%s", "rece");
+
+            ipc_rece(buf);
+
+            // 수신 완료 처리
+            bridge_setup_buf = 0;
+        }
+
+        write(0, "%d", bridge_setup_buf);
+
+        for (int i = 0; i < 100000000; i++)
+        {
+            ;
+        }
+        write(0, "%d", "end");
     }
     return 0;
 }
@@ -29,4 +51,50 @@ int debug_main(void)
         ;
     }
     return 0;
+}
+
+void bridge_skeleton()
+{
+    /*
+        딱히 시작 소개 문구는 없음
+    */
+
+    while (1)
+    {
+        // setup 처리
+        // 처리중에 mode 변수를 설정함
+        uint8_t mode;
+
+        // 다이렉터 통신 기능
+        if (mode < 3)
+        {
+            /*
+                패킷을 받아서 단계적으로 까기
+            */
+
+            // 가상화 있는 통신 기능
+            if (mode == 2)
+            {
+                // 가상화 된 외부 출력
+            }
+
+            /*
+                ip 처리 로직
+            */
+
+            /*
+                tcp 처리 로직
+            */
+
+            // 그외 등등의 처리로직
+        }
+        // 라우터 기능
+        else if (mode == 3)
+        {
+        }
+        // 미정의 된 기능
+        else if (mode == 4)
+        {
+        }
+    }
 }
