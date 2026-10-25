@@ -1,6 +1,8 @@
 #include "bridge.h"
 #include "call.h"
 
+int debug_main(void);
+
 int main(void)
 {
     debug_main();
@@ -27,7 +29,7 @@ int bridge_main(void)
         */
 
 #pragma region protocol_handle
-        uint8_t mode;
+        uint8_t mode = 0;
 
         switch (bridge_setup_buf & 0b1111)
         {
@@ -85,6 +87,8 @@ int bridge_main(void)
 
 int debug_main(void)
 {
+    uint8_t mode = 0;
+
     write(0, "%s", "debug main\n");
 
     uint8_t bridge_setup_buf = 0;
@@ -123,7 +127,7 @@ void bridge_skeleton()
     {
         // setup 처리
         // 처리중에 mode 변수를 설정함
-        uint8_t mode;
+        uint8_t mode = 0;
 
         // 다이렉터 통신 기능
         if (mode < 3)
