@@ -2,6 +2,8 @@
 .global _start
 
 _start:
+    ldr x0, [sp]
+    add x1, sp, #8
     bl main
     mov w0, w0
     bl axlib_exit
